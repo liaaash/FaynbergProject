@@ -25,8 +25,12 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 
-public class UndergroundGUI extends JFrame implements ActionListener, ItemListener, ChangeListener {
+public class UndergroundGUI extends JFrame implements ActionListener {
     private JTextField artistField;
+    private String id;
+
+    private ArrayList<Artist> relatedArtists;
+
     public UndergroundGUI() {
         super("#SoUnderground");
         init();
@@ -36,26 +40,26 @@ public class UndergroundGUI extends JFrame implements ActionListener, ItemListen
         // setting up the frame
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(500, 400);
-        setLocation(300, 50);
+        setLocation(300, 400);
 
         // create the MenuBar and menu component
 
         // add "File" and "Help" menus to the MenuBar
 
         // create the big text area located in the middle
-        JTextArea textArea = new JTextArea();
 
         // create welcome label
         JLabel welcomeLabel = new JLabel("#SoUnderground!");
         welcomeLabel.setFont(new Font("Helvetica", Font.BOLD, 20));
         JLabel explanationLabel = new JLabel("GET AHEAD OF THE WAVE!! Enter the name of an artist you like below, and find out 10 related ones who you may not know!");
         JPanel welcomePanel = new JPanel();
+        welcomePanel.setLayout(new GridLayout(2, 1));
         welcomePanel.add(welcomeLabel);
         welcomePanel.add(explanationLabel);
 
         // create the components at the bottom
         JLabel label = new JLabel("Enter Artist");
-        artistField = new JTextField();
+        artistField = new JTextField(50);
         JButton sendButton = new JButton("Send");
 
         // create a panel for organizing the components at the bottom
@@ -76,7 +80,6 @@ public class UndergroundGUI extends JFrame implements ActionListener, ItemListen
         // add the menu bar to the TOP of the frame, the big white text area
         // to the MIDDLE of the frame, and the "combinedPanels" (which has
         // the label, slider, text box, buttons, and checkboxes) at the BOTTOM
-        add(textArea, BorderLayout.CENTER);
         add(combinedPanels, BorderLayout.SOUTH);
 
         // --- SETTING UP EVENT HANDLING ----
@@ -87,14 +90,14 @@ public class UndergroundGUI extends JFrame implements ActionListener, ItemListen
         setVisible(true);
     }
 
-    public String getInitialArtistID(String name) {
+    public void setInitialArtistID(String name) {
         String n = "";
         if (name.indexOf(" ") == -1) {
             String[] arr = name.split(" ");
-            for (String x: arr) {
+            for (String x : arr) {
                 n += x + "+";
             }
-            n = n.substring(0, n.length()-2);
+            n = n.substring(0, n.length() - 2);
         }
         // https://api.spotify.com/v1/search?q=Taylor+Swift&type=artist&limit=1&offset=0
         String url = "https://api.spotify.com/v1/search?q=" + n + "&type=artist&limit=1&offset=0";
@@ -109,13 +112,36 @@ public class UndergroundGUI extends JFrame implements ActionListener, ItemListen
             System.out.println(e.getMessage());
         }
         JSONObject jsonObj = new JSONObject(urlResponse);
-        JSONArray artistList = jsonObj.getJSONArray("artists");
+        JSONArray artistList = jsonObj.getJSONArray("items");
         JSONObject artist = artistList.getJSONObject(0);
-        String id = artist.getString("id");
-        return id;
+        id = artist.getString("id");
     }
 
-    public ArrayList<Artistq>
+    public void setRelatedArtists() {
+        String url = "https://api.spotify.com/v1/artists/" + id + "/related-artists";
+        String urlResponse = "";
+        try {
+            URI myUri = URI.create(url); // creates a URI object from the url string
+            HttpRequest request = HttpRequest.newBuilder().uri(myUri).build();
+            HttpClient client = HttpClient.newHttpClient();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            urlResponse = response.body();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        JSONArray relatedList = new JSONArray(urlResponse);
+        for (int i = 0; i < relatedList.length(); i++) {
+            JSONObject artist = relatedList.getJSONObject(i);
+            String name = artist.getString("name");
+            System.out.println(name);
+            String id = artist.getString("id");
+            int popularity = artist.getInt("popularity");
+            JSONObject f = artist.getJSONObject("followers");
+            int followers = f.getInt("total");
+            Artist y = new Artist(name, followers, id, popularity);
+            relatedArtists.add(y);
+        }
+    }
 
     // ActionListener interface method, called when a button is clicked
     public void actionPerformed(ActionEvent ae) {
@@ -128,10 +154,13 @@ public class UndergroundGUI extends JFrame implements ActionListener, ItemListen
 
             if (text.equals("Send")) {
                 String artistName = artistField.getText();
+                setInitialArtistID(artistName);
+                System.out.println(id);
+                setRelatedArtists();
             }
-    }
+        }
 
-    // ItemListener interface method, called when EITHER check box is toggled!
+        // ItemListener interface method, called when EITHER check box is toggled!
         /*  public void itemStateChanged(ItemEvent e) {
         // cast e to a JCheckBox object since we want to call the getText method on it;
         // casting is needed since getSource() returns Object type, NOT a JCheckBox
@@ -158,4 +187,5 @@ public class UndergroundGUI extends JFrame implements ActionListener, ItemListen
         textArea.setText("" + value);
     } */
 
+    }
 }
