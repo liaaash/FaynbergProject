@@ -51,11 +51,11 @@ public class UndergroundGUI extends JFrame implements ActionListener {
         // create welcome label
         JLabel welcomeLabel = new JLabel("#SoUnderground!");
         welcomeLabel.setFont(new Font("Helvetica", Font.BOLD, 20));
-        JLabel explanationLabel = new JLabel("GET AHEAD OF THE WAVE!! Enter the name of an artist you like below, and find out 10 related ones who you may not know!");
+        //JLabel explanationLabel = new JLabel("GET AHEAD OF THE WAVE!! Enter the name of an artist you like below, and find out 10 related ones who you may not know!");
         JPanel welcomePanel = new JPanel();
         welcomePanel.setLayout(new GridLayout(2, 1));
-        welcomePanel.add(welcomeLabel);
-        welcomePanel.add(explanationLabel);
+        welcomePanel.add(welcomeLabel, BorderLayout.CENTER);
+        //welcomePanel.add(explanationLabel);
 
         // create the components at the bottom
         JLabel label = new JLabel("Enter Artist");
@@ -80,7 +80,7 @@ public class UndergroundGUI extends JFrame implements ActionListener {
         // add the menu bar to the TOP of the frame, the big white text area
         // to the MIDDLE of the frame, and the "combinedPanels" (which has
         // the label, slider, text box, buttons, and checkboxes) at the BOTTOM
-        add(combinedPanels, BorderLayout.SOUTH);
+        add(combinedPanels, BorderLayout.NORTH);
 
         // --- SETTING UP EVENT HANDLING ----
         //setting up buttons to use ActionListener interface and actionPerformed method
@@ -111,18 +111,25 @@ public class UndergroundGUI extends JFrame implements ActionListener {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-        JSONObject jsonObj = new JSONObject(urlResponse);
-        JSONArray artistList = jsonObj.getJSONArray("items");
-        JSONObject artist = artistList.getJSONObject(0);
-        id = artist.getString("id");
+        System.out.printf(urlResponse);
+//        JSONObject jsonObj = new JSONObject(urlResponse);
+//        JSONArray artistList = jsonObj.getJSONArray("items");
+//        JSONObject artist = artistList.getJSONObject(0);
+//        id = artist.getString("id");
     }
 
     public void setRelatedArtists() {
+        String url2 = "https://accounts.spotify.com/api/token";
         String url = "https://api.spotify.com/v1/artists/" + id + "/related-artists";
         String urlResponse = "";
         try {
-            URI myUri = URI.create(url); // creates a URI object from the url string
-            HttpRequest request = HttpRequest.newBuilder().uri(myUri).build();
+            URI myUri = URI.create(url2); // creates a URI object from the url string
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(myUri)
+                    .header("Authorization", "Basic " + "client:secret") // client:secret needs to come from developer account and be base64 encoded
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    // add BODY with key "grant_type" and value "client_credentials"
+                    .build();
             HttpClient client = HttpClient.newHttpClient();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             urlResponse = response.body();
