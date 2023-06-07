@@ -16,6 +16,5 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" exported="" name="se.michaelthelin.spotify.web.api.java" level="project" />
   </component>
 </module>
