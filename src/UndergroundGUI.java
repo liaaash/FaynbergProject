@@ -1,31 +1,29 @@
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JMenuBar;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+
+import org.apache.hc.core5.http.ParseException;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import se.michaelthelin.spotify.SpotifyApi;
+import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
+import se.michaelthelin.spotify.model_objects.credentials.ClientCredentials;
+import se.michaelthelin.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
 
 
 public class UndergroundGUI extends JFrame implements ActionListener {
+    private String accessToken;
     private JTextField artistField;
     private String id;
 
@@ -102,6 +100,7 @@ public class UndergroundGUI extends JFrame implements ActionListener {
         // https://api.spotify.com/v1/search?q=Taylor+Swift&type=artist&limit=1&offset=0
         String url = "https://api.spotify.com/v1/search?q=" + n + "&type=artist&limit=1&offset=0";
         String urlResponse = "";
+
         try {
             URI myUri = URI.create(url); // creates a URI object from the url string
             HttpRequest request = HttpRequest.newBuilder().uri(myUri).build();
@@ -117,10 +116,29 @@ public class UndergroundGUI extends JFrame implements ActionListener {
 //        JSONObject artist = artistList.getJSONObject(0);
 //        id = artist.getString("id");
     }
+    private static final SpotifyApi spotifyApi = new SpotifyApi.Builder()
+            .setClientId("55449f06d4c542d2a4b556321f3e4de0")
+            .setClientSecret("51e230c6aca640d0bc937cb5195fcc70")
+            .build();
+    private static final ClientCredentialsRequest clientCredentialsRequest = spotifyApi.clientCredentials()
+            .build();
 
+    public static void clientCredentials_Sync() {
+        try {
+            final ClientCredentials clientCredentials = clientCredentialsRequest.execute();
+
+            // Set access token for further "spotifyApi" object usage
+            spotifyApi.setAccessToken(clientCredentials.getAccessToken());
+            System.out.println("Expires in: " + clientCredentials.getExpiresIn());
+        } catch (IOException | SpotifyWebApiException | ParseException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
     public void setRelatedArtists() {
         String url2 = "https://accounts.spotify.com/api/token";
         String url = "https://api.spotify.com/v1/artists/" + id + "/related-artists";
+
+
         String urlResponse = "";
         try {
             URI myUri = URI.create(url2); // creates a URI object from the url string
