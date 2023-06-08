@@ -106,72 +106,80 @@ public class UndergroundGUI extends JFrame implements ActionListener {
         }
         accessToken = access;
 
-        String url2 = "https://api.spotify.com/v1/search?q=taylor+swift&type=artist";
-        HttpRequest request2 = HttpRequest.newBuilder().uri(URI.create(url2))
-                .header("Authorization", "Bearer " + accessToken).build();
-        try {
-            HttpClient client = HttpClient.newHttpClient();
-            HttpResponse<String> response = client.send(request2, HttpResponse.BodyHandlers.ofString());
-            System.out.println(response.body());
-        } catch (Exception e) {
-            System.out.print(e.getMessage());
-        }
+//        String url2 = "https://api.spotify.com/v1/search?q=taylor+swift&type=artist";
+//        HttpRequest request2 = HttpRequest.newBuilder().uri(URI.create(url2))
+//                .header("Authorization", "Bearer " + accessToken).build();
+//        try {
+//            HttpClient client = HttpClient.newHttpClient();
+//            HttpResponse<String> response = client.send(request2, HttpResponse.BodyHandlers.ofString());
+//            System.out.println(response.body());
+//        } catch (Exception e) {
+//            System.out.print(e.getMessage());
+//        }
     }
 
     public void setInitialArtistID(String name) {
 
         String n = "";
-        if (name.indexOf(" ") == -1) {
+        if (name.indexOf(" ") != -1) {
             String[] arr = name.split(" ");
             for (String x : arr) {
                 n += x + "+";
             }
-            n = n.substring(0, n.length() - 2);
+            n = n.substring(0, n.length() - 1);
+        } else {
+            n = name;
         }
         System.out.println(n);
 
-        String url = "https://api.spotify.com/v1/search?q=" + n + "&type=artist&limit=0&offset=0";
+        String url = "https://api.spotify.com/v1/search?q=" + n + "&type=artist&limit=1&offset=0";
         HttpRequest request2 = HttpRequest.newBuilder().uri(URI.create(url))
                 .header("Authorization", "Bearer " + accessToken).build();
         HttpResponse<String> response = null;
+        String urlResponse = "";
         try {
             HttpClient client = HttpClient.newHttpClient();
             response = client.send(request2, HttpResponse.BodyHandlers.ofString());
-            System.out.println(response.body());
+            urlResponse = response.body();
+            System.out.println(urlResponse);
         } catch (Exception e) {
             System.out.print(e.getMessage());
         }
-
-        JSONObject jsonObj = new JSONObject(response.body());
-        JSONArray artistList = jsonObj.getJSONArray("items");
-        JSONObject artist = artistList.getJSONObject(0);
-        id = artist.getString("id");
+        JSONObject jsonObj = new JSONObject(urlResponse);
+        JSONObject artistList = jsonObj.getJSONObject("artists");
+        JSONArray items = artistList.getJSONArray("items");
+        JSONObject artist = items.getJSONObject(0);
+        String id1 = artist.getString("id");
+        System.out.println(id1);
+        id = id1;
     }
     public void setRelatedArtists() {
         String url = "https://api.spotify.com/v1/artists/" + id + "/related-artists";
         HttpRequest request2 = HttpRequest.newBuilder().uri(URI.create(url))
                 .header("Authorization", "Bearer " + accessToken).build();
         HttpResponse<String> response = null;
+        String urlResponse = "";
         try {
             HttpClient client = HttpClient.newHttpClient();
             response = client.send(request2, HttpResponse.BodyHandlers.ofString());
-            System.out.println(response.body());
+            urlResponse = response.body();
+            System.out.println(urlResponse);
         } catch (Exception e) {
             System.out.print(e.getMessage());
         }
 
-        JSONArray relatedList = new JSONArray(response);
-        for (int i = 0; i < relatedList.length(); i++) {
-            JSONObject artist = relatedList.getJSONObject(i);
-            String name = artist.getString("name");
-            System.out.println(name);
-            String id = artist.getString("id");
-            int popularity = artist.getInt("popularity");
-            JSONObject f = artist.getJSONObject("followers");
-            int followers = f.getInt("total");
-            Artist y = new Artist(name, followers, id, popularity);
-            relatedArtists.add(y);
-        }
+//        JSONArray relatedList = new JSONArray(urlResponse);
+//        for (int i = 0; i < 10; i++) {
+//            JSONObject artist = relatedList.getJSONObject(i);
+//            String name = artist.getString("name");
+//            System.out.println(name);
+//            String id = artist.getString("id");
+//            int popularity = artist.getInt("popularity");
+//            JSONObject f = artist.getJSONObject("followers");
+//            int followers = f.getInt("total");
+//            Artist y = new Artist(name, followers, id, popularity);
+//            relatedArtists.add(y);
+//        }
     }
 
     // ActionListener interface method, called when a button is clicked
